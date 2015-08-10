@@ -3,28 +3,19 @@ import java.util.Collections;
 import java.util.List;
 
 public class CatsHelper {
-    Api api;
 
-    public void saveTheCutestCat(String query, final CutestCatCallback cutestCatCallback) {
-        api.queryCats(query, new Api.CatsQueryCallback() {
+    ApiWrapper apiWrapper;
+
+    public void saveTheCutestCat(String query, final Callback<URI> cutestCatCallback) {
+        apiWrapper.queryCats(query, new Callback<List<Cat>>() {
             @Override
-            public void onCatListReceived(List<Cat> cats) {
+            public void onResult(List<Cat> cats) {
                 Cat cutest = findCutest(cats);
-                api.store(cutest, new Api.StoreCallback() {
-                    @Override
-                    public void onCatStored(URI uri) {
-                        cutestCatCallback.onCutestCatSaved(uri);
-                    }
-
-                    @Override
-                    public void onStoreFailed(Exception e) {
-                        cutestCatCallback.onError(e);
-                    }
-                });
+                apiWrapper.store(cutest, cutestCatCallback);
             }
 
             @Override
-            public void onQueryFailed(Exception e) {
+            public void onError(Exception e) {
                 cutestCatCallback.onError(e);
             }
         });
@@ -32,11 +23,5 @@ public class CatsHelper {
 
     private Cat findCutest(List<Cat> cats) {
         return Collections.max(cats);
-    }
-
-    public interface CutestCatCallback {
-        void onCutestCatSaved(URI uri);
-
-        void onError(Exception e);
     }
 }
